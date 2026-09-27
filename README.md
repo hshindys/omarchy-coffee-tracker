@@ -20,6 +20,8 @@ the model that fits it:
 | ----------- | -------------------------------------------------------- |
 | Portafilter | shots × dose × bean mg/g × extraction                    |
 | Chemex      | ml/100 × brew ratio × bean mg/g × extraction             |
+| French press| ml/100 × brew ratio × bean mg/g × extraction             |
+| Turkish     | ml/100 × brew ratio × bean mg/g × extraction             |
 | Powder      | servings × mg per serving                                |
 | Cans        | ml/100 × mg per 100 ml                                   |
 

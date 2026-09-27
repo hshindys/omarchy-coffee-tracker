@@ -15,6 +15,8 @@ import qs.Ui
 //
 //   Siebträger  shots × dose × bean mg/g × extraction
 //   Chemex      ml/100 × brew ratio × bean mg/g × extraction
+//   French      ml/100 × brew ratio × bean mg/g × extraction
+//   Türkisch    ml/100 × brew ratio × bean mg/g × extraction
 //   HOLY        servings × mg per serving      (powder, you dose it)
 //   Dosen       ml/100 × mg per 100 ml         (canned, it is printed on)
 //
@@ -36,7 +38,16 @@ BarWidget {
   readonly property string barIcon: "󱂟"
 
   // ---- Brew model. Everything the coffee roster is priced from. --------
-  readonly property string method: setting("method", "portafilter") === "chemex" ? "chemex" : "portafilter"
+  // Every value the method switch can land on. Anything else that ends up
+  // in shell.json — a typo, an older config — falls back to the portafilter.
+  readonly property var methodOptions: ["portafilter", "chemex", "french", "turkish"]
+  readonly property string method: {
+    var m = String(setting("method", "portafilter"))
+    return methodOptions.indexOf(m) >= 0 ? m : "portafilter"
+  }
+  // Espresso is the only method priced by the basket; every other method
+  // is a per-volume brew and reads the shared ratio / yield knobs.
+  readonly property bool espressoMethod: method === "portafilter"
   readonly property real beanMgPerGram: clampNum(setting("beanMgPerGram", 12), 6, 20)
   readonly property int doseGrams: Math.round(clampNum(setting("doseGrams", 18), 5, 40))
   readonly property real espressoYield: clampNum(setting("espressoYield", 65), 20, 100) / 100
@@ -117,6 +128,21 @@ BarWidget {
     { id: "filter500",  name: t("drink.filter500"),  ml: 500, icon: "󰙚", source: "coffee" }
   ]
 
+  // French press: the same full-immersion numbers as the filter brew, only
+  // the cup sizes are its own — a beaker pours a mug, not a 200 ml cup.
+  readonly property var frenchDrinks: [
+    { id: "french250",  name: t("drink.french250"),  ml: 250, icon: "󰆪", source: "coffee" },
+    { id: "french350",  name: t("drink.french350"),  ml: 350, icon: "󰅶", source: "coffee" },
+    { id: "french500",  name: t("drink.french500"),  ml: 500, icon: "󰙚", source: "coffee" }
+  ]
+
+  // Turkish: the fincan is small and the second pour is a second cup, so
+  // the roster is volumes rather than named drinks.
+  readonly property var turkishDrinks: [
+    { id: "turkish60",  name: t("drink.turkish60"),   ml: 60,  icon: "󰛊", source: "coffee" },
+    { id: "turkish120", name: t("drink.turkish120"),  ml: 120, icon: "󰅷", source: "coffee" }
+  ]
+
   readonly property var holyDrinks: [
     { id: "holy-half",  name: t("drink.holy-half"),    servings: 0.5, icon: "󱐩", source: "energy" },
     { id: "holy-1",     name: t("drink.holy-1"),    servings: 1.0, icon: "󱄎", source: "energy" },
@@ -135,16 +161,26 @@ BarWidget {
     { id: "clubmate", name: t("drink.clubmate"), ml: 500, mgPer100: 20, icon: "󰆫", source: "energy" }
   ]
 
-  readonly property var drinks: method === "chemex" ? chemexDrinks : portafilterDrinks
-  readonly property string methodLabel: t(method === "chemex" ? "method.chemex" : "method.portafilter")
-  readonly property string methodIcon: method === "chemex" ? "󱜼" : "󱂟"
+  readonly property var drinks: {
+    if (method === "chemex") return chemexDrinks
+    if (method === "french") return frenchDrinks
+    if (method === "turkish") return turkishDrinks
+    return portafilterDrinks
+  }
+  readonly property string methodLabel: t("method." + method)
+  readonly property string methodIcon: {
+    if (method === "chemex") return "󱜼"
+    if (method === "french") return "󰙚"
+    if (method === "turkish") return "󰛊"
+    return "󱂟"
+  }
 
   // The one-tap default behind the middle click: the shot on the portafilter,
-  // the standard cup on the Chemex.
+  // the standard cup on every other brew.
   readonly property var defaultDrink: drinks.length > 0 ? drinks[0] : null
 
   function drinkById(id) {
-    var pools = [portafilterDrinks, chemexDrinks, holyDrinks, canDrinks]
+    var pools = [portafilterDrinks, chemexDrinks, frenchDrinks, turkishDrinks, holyDrinks, canDrinks]
     for (var p = 0; p < pools.length; p++)
       for (var i = 0; i < pools[p].length; i++)
         if (pools[p][i].id === id) return pools[p][i]
@@ -485,7 +521,16 @@ BarWidget {
   }
 
   function setMethod(value) {
-    persistSettings({ method: value === "chemex" ? "chemex" : "portafilter" })
+    var m = String(value)
+    if (methodOptions.indexOf(m) < 0) m = "portafilter"
+    persistSettings({ method: m })
+  }
+
+  // The panel's `M` shortcut walks the roster in order rather than flipping
+  // between two values, now that there are more than two to land on.
+  function cycleMethod() {
+    var i = methodOptions.indexOf(method)
+    setMethod(methodOptions[(i + 1) % methodOptions.length])
   }
 
   function formatVolume(ml) {

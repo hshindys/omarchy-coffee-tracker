@@ -37,7 +37,7 @@
     },
     "schema": [
       { "key": "language", "type": "enum", "label": "Language", "options": ["auto", "en", "de"], "defaultValue": "auto", "description": "auto follows the session locale. Additional codes appear as locale files are added." },
-      { "key": "method", "type": "enum", "label": "Brew method", "options": ["portafilter", "chemex"], "defaultValue": "portafilter" },
+      { "key": "method", "type": "enum", "label": "Brew method", "options": ["portafilter", "chemex", "french", "turkish"], "defaultValue": "portafilter" },
       { "key": "dailyLimit", "type": "integer", "label": "Daily limit (mg)", "min": 50, "max": 2000, "step": 10, "defaultValue": 400 },
       { "key": "halfLifeHours", "type": "integer", "label": "Half-life (h)", "min": 1, "max": 12, "defaultValue": 5 },
       { "key": "sleepThreshold", "type": "integer", "label": "Residual caffeine (mg)", "min": 5, "max": 400, "step": 5, "defaultValue": 50 },

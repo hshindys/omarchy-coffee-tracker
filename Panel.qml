@@ -112,7 +112,9 @@ Panel {
   // Summoning by hotkey moves no pointer, so a hover the bar was still
   // holding must not keep the center indicators revealed behind the panel.
   function setCenterHoverRevealSuppressed(value) {
-    if (root.bar && "centerHoverRevealSuppressed" in root.bar)
+    if (root.bar && typeof root.bar.setCenterHoverRevealSuppressed === "function")
+      root.bar.setCenterHoverRevealSuppressed(value)
+    else if (root.bar && "centerHoverRevealSuppressed" in root.bar)
       root.bar.centerHoverRevealSuppressed = value
   }
 
@@ -155,7 +157,7 @@ Panel {
         if (key === "u") root.host.undoLast()
         else if (key === "e") root.host.addDrink(root.host.defaultDrink)
         else if (key === "h") root.host.addDrinkId("holy-1")
-        else if (key === "m") root.host.setMethod(root.host.method === "chemex" ? "portafilter" : "chemex")
+        else if (key === "m") root.host.cycleMethod()
         else if (key === "1") root.tab = "coffee"
         else if (key === "2") root.tab = "energy"
         else if (key === ",") root.settingsOpen = !root.settingsOpen
@@ -513,7 +515,9 @@ Panel {
                   fontFamily: root.contentFontFamily
                   options: [
                     { value: "portafilter", label: root.t("method.portafilter"), icon: "󱂟", tooltip: root.t("method.portafilter.tooltip") },
-                    { value: "chemex", label: root.t("method.chemex"), icon: "󱜼", tooltip: root.t("method.chemex.tooltip") }
+                    { value: "chemex", label: root.t("method.chemex"), icon: "󱜼", tooltip: root.t("method.chemex.tooltip") },
+                    { value: "french", label: root.t("method.french"), icon: "󰙚", tooltip: root.t("method.french.tooltip") },
+                    { value: "turkish", label: root.t("method.turkish"), icon: "󰛊", tooltip: root.t("method.turkish.tooltip") }
                   ]
                   onChanged: function(v) { if (root.host) root.host.setMethod(v) }
                 }
@@ -522,7 +526,9 @@ Panel {
                   width: parent.width
                   text: {
                     if (!root.host) return ""
-                    if (root.host.method === "chemex")
+                    // Every method but the portafilter is priced per volume,
+                    // so they all read the same ratio / yield summary.
+                    if (root.host.method !== "portafilter")
                       return root.t("brew.filterSummary",
                         root.decimal(root.host.filterRatioPer100, 1),
                         Math.round(root.host.filterYield * 100),
@@ -1310,7 +1316,7 @@ Panel {
               Column {
                 width: parent.width
                 spacing: Style.space(4)
-                visible: root.host ? root.host.method === "chemex" : false
+                visible: root.host ? root.host.method !== "portafilter" : false
 
                 Item {
                   width: parent.width
