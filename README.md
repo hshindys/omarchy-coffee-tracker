@@ -5,8 +5,8 @@ milligrams rather than cups, and it derives the milligrams from how the
 drink is actually made instead of looking them up in a table.
 
 The bar shows today's total from every source. Click it and the panel
-behind it owns the one-tap cup buttons, the brew-method switch, the energy
-roster, today's log, and the last seven days.
+behind it owns the one-tap cup buttons, the brew-method switch, the tea
+and energy rosters, today's log, and the last seven days.
 
 ![Coffee Tracker panel](preview.png)
 
@@ -24,14 +24,16 @@ the model that fits it:
 | Turkish     | ml/100 × brew ratio × bean mg/g × extraction             |
 | Powder      | servings × mg per serving                                |
 | Cans        | ml/100 × mg per 100 ml                                   |
+| Tea         | ml/100 × mg per 100 ml, per leaf                         |
 
 Move the grind numbers and the whole coffee roster moves with them. Move
-the serving strength and every powder portion follows. Cans are the one
-fixed table, because their caffeine is a label fact rather than a choice.
+the serving strength and every powder portion follows. Cans and tea are
+the fixed tables, because their caffeine is a label fact or a fact about
+the leaf rather than a choice of yours.
 
-Everything lands in the same day total, which is the point of tracking two
-sources at once: 200 mg is 200 mg whether it came out of a portafilter or
-a shaker.
+Everything lands in the same day total, which is the point of tracking
+three sources at once: 200 mg is 200 mg whether it came out of a
+portafilter, a teapot or a shaker.
 
 ## What it shows
 
@@ -90,8 +92,8 @@ rm ~/.local/state/omarchy/coffee-log.json
 | Right-click           | Take the last drink back              |
 
 Inside the panel: `E` logs the default cup, `H` a powder serving, `U`
-undoes, `M` switches brew method, `1` / `2` switch tabs, `,` opens the
-settings.
+undoes, `M` switches brew method, `1` / `2` / `3` switch tabs, `,` opens
+the settings.
 
 From a script or a keybinding:
 
@@ -103,6 +105,7 @@ omarchy-shell coffee undo        # take the last one back
 omarchy-shell coffee clear       # clear today
 omarchy-shell coffee today       # print today's summary
 omarchy-shell coffee open        # open the panel
+omarchy-shell coffee tea         # open the panel on the tea tab
 ```
 
 The IPC target stays `coffee` rather than the full plugin id, because it is

@@ -7,8 +7,8 @@ import qs.Ui
 // Caffeine tracker.
 //
 // The bar label is today's caffeine total from every source; the panel
-// behind it owns the one-tap cup buttons, the brew-method switch, the
-// energy-drink roster, and the log.
+// behind it owns the one-tap cup buttons, the brew-method switch, the tea
+// and energy rosters, and the log.
 //
 // Caffeine is not a lookup table — it is derived from how the drink is
 // actually made, and each source gets the model that fits it:
@@ -19,14 +19,16 @@ import qs.Ui
 //   Türkisch    ml/100 × brew ratio × bean mg/g × extraction
 //   HOLY        servings × mg per serving      (powder, you dose it)
 //   Dosen       ml/100 × mg per 100 ml         (canned, it is printed on)
+//   Tee         ml/100 × mg per 100 ml         (steeped, it is the leaf)
 //
 // Move the grind numbers and the whole coffee roster moves with them; move
-// the serving strength and every HOLY portion follows. The cans are the one
-// fixed table, because their caffeine is a label fact rather than a choice.
+// the serving strength and every HOLY portion follows. The cans and the
+// teas are the fixed tables, because their caffeine is a label fact or a
+// fact about the leaf rather than a choice.
 //
-// Everything lands in the same day total. That is the point of tracking two
-// sources at once: 200 mg is 200 mg whether it came out of a portafilter or
-// a shaker.
+// Everything lands in the same day total. That is the point of tracking
+// three sources at once: 200 mg is 200 mg whether it came out of a
+// portafilter, a teapot or a shaker.
 //
 // The log lives in its own state file rather than in shell.json. It is user
 // data that grows, and every bar instance watches the same file, so a drink
@@ -161,6 +163,18 @@ BarWidget {
     { id: "clubmate", name: t("drink.clubmate"), ml: 500, mgPer100: 20, icon: "󰆫", source: "energy" }
   ]
 
+  // Tea is steeped, not extracted: leaf, water temperature and steep time
+  // are yours, and none of the three is a setting on this panel. So the
+  // roster carries its own strength in mg/100 ml the way the cans do —
+  // a typical cup of that leaf — rather than pretending a bean you never
+  // used decides it.
+  readonly property var teaDrinks: [
+    { id: "blacktea", name: t("drink.blacktea"), ml: 250, mgPer100: 20, icon: "󰶞", source: "tea" },
+    { id: "earlgrey", name: t("drink.earlgrey"), ml: 250, mgPer100: 20, icon: "󱌙", source: "tea" },
+    { id: "milktea",  name: t("drink.milktea"),  ml: 200, mgPer100: 20, icon: "󰊦", source: "tea" },
+    { id: "matcha",   name: t("drink.matcha"),   ml: 120, mgPer100: 50, icon: "󰆪", source: "tea" }
+  ]
+
   readonly property var drinks: {
     if (method === "chemex") return chemexDrinks
     if (method === "french") return frenchDrinks
@@ -180,7 +194,7 @@ BarWidget {
   readonly property var defaultDrink: drinks.length > 0 ? drinks[0] : null
 
   function drinkById(id) {
-    var pools = [portafilterDrinks, chemexDrinks, frenchDrinks, turkishDrinks, holyDrinks, canDrinks]
+    var pools = [portafilterDrinks, chemexDrinks, frenchDrinks, turkishDrinks, holyDrinks, canDrinks, teaDrinks]
     for (var p = 0; p < pools.length; p++)
       for (var i = 0; i < pools[p].length; i++)
         if (pools[p][i].id === id) return pools[p][i]
@@ -221,8 +235,14 @@ BarWidget {
     return Number(drink.ml) || 0
   }
 
+  // The source an entry is booked under: one log, three sources, and only
+  // energy kept apart from the cups — a can is counted in cans, while a
+  // steeped cup is a cup like any other.
   function sourceOf(drink) {
-    return drink && drink.source === "energy" ? "energy" : "coffee"
+    if (!drink) return "coffee"
+    if (drink.source === "energy") return "energy"
+    if (drink.source === "tea") return "tea"
+    return "coffee"
   }
 
   readonly property int mgPerShot: Math.round(doseGrams * beanMgPerGram * espressoYield)
@@ -249,7 +269,25 @@ BarWidget {
     return Math.round(total)
   }
 
-  readonly property int todayCoffeeMg: todayMg - todayEnergyMg
+  readonly property int todayCoffeeMg: todayMg - todayEnergyMg - todayTeaMg
+
+  readonly property int todayTeaMg: {
+    var total = 0
+    for (var i = 0; i < todayEntries.length; i++)
+      if (todayEntries[i].source === "tea") total += Number(todayEntries[i].mg) || 0
+    return Math.round(total)
+  }
+
+  // The day, named bucket by bucket — but only when there is more than one
+  // source in it. A single source is already named by the summary above it,
+  // and a tea day must never be reported as a coffee day.
+  function bucketSummary() {
+    var parts = []
+    if (todayCoffeeMg > 0) parts.push(t("bucket.coffee", todayCoffeeMg))
+    if (todayTeaMg > 0) parts.push(t("bucket.tea", todayTeaMg))
+    if (todayEnergyMg > 0) parts.push(t("bucket.energy", todayEnergyMg))
+    return parts.length > 1 ? parts.join(" · ") : ""
+  }
 
   readonly property int todayMl: {
     var total = 0
@@ -375,19 +413,22 @@ BarWidget {
       next.setDate(next.getDate() + 1)
       var to = startOfDay(next.getTime())
       var coffeeMg = 0
+      var teaMg = 0
       var energyMg = 0
       var count = 0
       for (var i = 0; i < entries.length; i++) {
         if (entries[i].t >= from && entries[i].t < to) {
           if (entries[i].source === "energy") energyMg += Number(entries[i].mg) || 0
+          else if (entries[i].source === "tea") teaMg += Number(entries[i].mg) || 0
           else coffeeMg += Number(entries[i].mg) || 0
           count += 1
         }
       }
       out.push({
         day: from,
-        mg: Math.round(coffeeMg + energyMg),
+        mg: Math.round(coffeeMg + teaMg + energyMg),
         coffeeMg: Math.round(coffeeMg),
+        teaMg: Math.round(teaMg),
         energyMg: Math.round(energyMg),
         count: count,
         today: d === 0
@@ -427,8 +468,9 @@ BarWidget {
         mg: Math.round(mg),
         method: String((e && e.method) || ""),
         // Entries written before the energy roster existed carry no source;
-        // they were all coffee, so that is what they become.
-        source: (e && e.source) === "energy" ? "energy" : "coffee"
+        // they were all coffee, so that is what they become. Anything else
+        // is kept as it was written.
+        source: (e && (e.source === "energy" || e.source === "tea")) ? String(e.source) : "coffee"
       })
     }
     cleaned.sort(function(a, b) { return a.t - b.t })
@@ -477,7 +519,7 @@ BarWidget {
       name: String(drink.name),
       ml: volumeFor(drink),
       mg: mg,
-      method: sourceOf(drink) === "energy" ? "energy" : root.method,
+      method: sourceOf(drink) === "coffee" ? root.method : sourceOf(drink),
       source: sourceOf(drink)
     })
     root.now = Date.now()
@@ -560,9 +602,8 @@ BarWidget {
     var rest = "· " + (overLimit
       ? t("bar.overGoal", todayMg - dailyLimit)
       : t("bar.remaining", remainingMg))
-    var split = todayEnergyMg > 0 && todayCoffeeMg > 0
-      ? "\n" + t("bar.split", todayCoffeeMg, todayEnergyMg)
-      : ""
+    var summary = bucketSummary()
+    var split = summary ? "\n" + summary : ""
     return head + " " + rest + split
       + "\n" + t("bar.inBody", activeMg, sleepThreshold, clearAtLabel)
       + "\n" + t("bar.method", methodLabel)
@@ -580,7 +621,8 @@ BarWidget {
   function togglePanel() { if (panelLoader.item) panelLoader.item.toggle() }
 
   function openTab(name) {
-    if (panelLoader.item) panelLoader.item.tab = name === "energy" ? "energy" : "coffee"
+    if (panelLoader.item)
+      panelLoader.item.tab = (name === "energy" || name === "tea") ? name : "coffee"
     open()
   }
 
@@ -653,15 +695,15 @@ BarWidget {
     function clear(): void { root.clearToday() }
     function method(value: string): void { root.setMethod(value) }
     function today(): string {
+      var summary = root.bucketSummary()
       return root.sourceSummary + " · " + root.todayMg + " / " + root.dailyLimit + " mg"
-        + (root.todayEnergyMg > 0
-          ? " (" + root.t("bar.split", root.todayCoffeeMg, root.todayEnergyMg) + ")"
-          : "")
+        + (summary ? " (" + summary + ")" : "")
         + " · " + root.t("panel.inBody", root.activeMg)
     }
     function open(): void { root.open() }
     function energy(): void { root.openTab("energy") }
     function coffee(): void { root.openTab("coffee") }
+    function tea(): void { root.openTab("tea") }
     function close(): void { root.close() }
     function show(): void { root.open() }
     function hide(): void { root.close() }

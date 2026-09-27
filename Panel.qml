@@ -4,13 +4,14 @@ import qs.Commons
 import qs.Ui
 
 // The caffeine panel: the day's total as a number and a filling bar, then
-// two tabs for the two sources that feed it — the machines on one, the
-// powders and cans on the other.
+// three tabs for the three sources that feed it — the machines on one, the
+// leaves on one, the powders and cans on the third.
 //
 // The header and the right-hand column are deliberately outside the tabs.
 // What you drank and how close you are to the ceiling is one number no
 // matter where it came from; the tab only decides what you can add next.
-// That is the whole reason both sources live in one widget instead of two.
+// That is the whole reason all three sources live in one widget instead of
+// several.
 //
 // Laid out wide rather than tall. The header spans the panel because the
 // bar toward the daily ceiling is the one element that wants the full
@@ -32,8 +33,8 @@ Panel {
   property var anchorItem: null
   property var hostWidget: null
 
-  // "coffee" | "energy". Not persisted: the panel opens on the machines,
-  // which is where most days start.
+  // "coffee" | "tea" | "energy". Not persisted: the panel opens on the
+  // machines, which is where most days start.
   property string tab: "coffee"
 
   // Session-local as well — the panel should open compact every time, not
@@ -66,7 +67,12 @@ Panel {
   readonly property color fillColor: overLimit ? urgentColor : accentColor
 
   // Energy reads as the same colour at half strength — one palette, two
-  // materials, so a stacked column still says "caffeine" first.
+  // materials, so a stacked column still says "caffeine" first. Tea sits
+  // between the two: brewed like coffee, dosed like a label.
+  function teaTint(base) {
+    return Qt.rgba(base.r, base.g, base.b, 0.7)
+  }
+
   function energyTint(base) {
     return Qt.rgba(base.r, base.g, base.b, 0.45)
   }
@@ -80,9 +86,21 @@ Panel {
     return out
   }
 
+  readonly property bool weekHasCoffee: {
+    var weeks = host ? host.weekTotals : []
+    for (var i = 0; i < weeks.length; i++) if (weeks[i].coffeeMg > 0) return true
+    return false
+  }
+
   readonly property bool weekHasEnergy: {
     var weeks = host ? host.weekTotals : []
     for (var i = 0; i < weeks.length; i++) if (weeks[i].energyMg > 0) return true
+    return false
+  }
+
+  readonly property bool weekHasTea: {
+    var weeks = host ? host.weekTotals : []
+    for (var i = 0; i < weeks.length; i++) if (weeks[i].teaMg > 0) return true
     return false
   }
 
@@ -159,7 +177,8 @@ Panel {
         else if (key === "h") root.host.addDrinkId("holy-1")
         else if (key === "m") root.host.cycleMethod()
         else if (key === "1") root.tab = "coffee"
-        else if (key === "2") root.tab = "energy"
+        else if (key === "2") root.tab = "tea"
+        else if (key === "3") root.tab = "energy"
         else if (key === ",") root.settingsOpen = !root.settingsOpen
       }
 
@@ -179,7 +198,7 @@ Panel {
 
           // ---- Header. Full width, because the bar toward the ceiling is
           //      the one element that earns it — and because it is the one
-          //      thing both tabs feed.
+          //      thing all three tabs feed.
           Item {
             width: parent.width
             height: Math.max(heroIcon.implicitHeight, heroLabels.implicitHeight, headerStats.implicitHeight)
@@ -188,7 +207,7 @@ Panel {
               id: heroIcon
               anchors.left: parent.left
               anchors.verticalCenter: parent.verticalCenter
-              text: root.tab === "energy" ? "󱐋" : (root.host ? root.host.methodIcon : "󱂟")
+              text: root.tab === "energy" ? "󱐋" : (root.tab === "tea" ? "󰶞" : (root.host ? root.host.methodIcon : "󱂟"))
               color: root.host && root.host.todayEntries.length > 0 ? root.fillColor : root.dim
               font.family: root.contentFontFamily
               font.pixelSize: Style.font.displayLarge
@@ -375,9 +394,9 @@ Panel {
                 anchors.left: parent.left
                 text: {
                   if (!root.host) return ""
-                  if (root.host.todayEnergyMg > 0 && root.host.todayCoffeeMg > 0)
-                    return root.t("panel.inBodySplit", root.host.activeMg,
-                      root.host.todayCoffeeMg, root.host.todayEnergyMg)
+                  var summary = root.host.bucketSummary()
+                  if (summary)
+                    return root.t("panel.inBody", root.host.activeMg) + "  ·  " + summary
                   return root.t("panel.inBody", root.host.activeMg)
                 }
                 color: root.dim
@@ -424,6 +443,7 @@ Panel {
                 Repeater {
                   model: [
                     { id: "coffee", label: root.t("tab.coffee"), icon: "󰅶" },
+                    { id: "tea", label: root.t("tab.tea"), icon: "󰶞" },
                     { id: "energy", label: root.t("tab.energy"), icon: "󱐋" }
                   ]
 
@@ -595,6 +615,56 @@ Panel {
                 }
               }
 
+              // ================= Tee =================
+              Column {
+                width: parent.width
+                spacing: Style.space(10)
+                visible: root.tab === "tea"
+
+                PanelSectionHeader {
+                  text: root.t("section.logCup")
+                  foreground: root.contentForeground
+                  fontFamily: root.contentFontFamily
+                }
+
+                Grid {
+                  id: teaGrid
+                  width: parent.width
+                  columns: 2
+                  columnSpacing: Style.space(10)
+                  rowSpacing: Style.space(10)
+
+                  readonly property real cellWidth: (width - columnSpacing) / 2
+
+                  Repeater {
+                    model: root.host ? root.host.teaDrinks : []
+
+                    DrinkCard {
+                      required property var modelData
+                      width: teaGrid.cellWidth
+                      iconText: modelData.icon
+                      title: modelData.name
+                      subtitle: root.host
+                        ? root.host.formatVolume(root.host.volumeFor(modelData))
+                          + " · " + root.host.caffeineFor(modelData) + " mg"
+                        : ""
+                      foreground: root.contentForeground
+                      fontFamily: root.contentFontFamily
+                      onClicked: if (root.host) root.host.addDrink(modelData)
+                    }
+                  }
+                }
+
+                Text {
+                  width: parent.width
+                  text: root.t("tea.note")
+                  color: root.dim
+                  font.family: root.contentFontFamily
+                  font.pixelSize: Style.font.caption
+                  wrapMode: Text.WordWrap
+                }
+              }
+
               // ================= Energydrink =================
               Column {
                 width: parent.width
@@ -698,7 +768,7 @@ Panel {
               width: body.colWidth
               spacing: Style.space(10)
 
-              // ---- Today's log, both sources in one list. Every drink is
+              // ---- Today's log, every source in one list. Every drink is
               //      removable, because a tracker you cannot correct is a
               //      tracker you stop trusting.
               Item {
@@ -806,8 +876,9 @@ Panel {
                           var d = root.host ? root.host.drinkById(logRow.modelData.id) : null
                           return d ? d.icon : (logRow.isEnergy ? "󱐋" : "󰅶")
                         }
-                        // Energy keeps the tint it has everywhere else, so
-                        // the list reads as two sources without a legend.
+                        // Energy keeps the tint it has everywhere else, and
+                        // tea carries its own leaf, so the list reads by
+                        // source without a legend.
                         color: logRow.isEnergy ? root.accentColor : root.contentForeground
                         font.family: root.contentFontFamily
                         font.pixelSize: Style.font.body
@@ -984,10 +1055,23 @@ Panel {
                       }
 
                       Rectangle {
+                        id: teaSegment
                         anchors.left: parent.left
                         anchors.right: parent.right
                         anchors.bottom: parent.bottom
                         anchors.bottomMargin: coffeeSegment.height
+                        radius: Math.min(Style.space(3), width / 2)
+                        height: weekRow.barHeight(weekCol.modelData.teaMg)
+                        color: root.teaTint(weekCol.baseColor)
+
+                        Behavior on height { NumberAnimation { duration: 260; easing.type: Easing.OutCubic } }
+                      }
+
+                      Rectangle {
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        anchors.bottom: parent.bottom
+                        anchors.bottomMargin: coffeeSegment.height + teaSegment.height
                         radius: Math.min(Style.space(3), width / 2)
                         height: weekRow.barHeight(weekCol.modelData.energyMg)
                         color: root.energyTint(weekCol.baseColor)
@@ -1026,12 +1110,14 @@ Panel {
                 }
               }
 
-              // Only worth explaining once there is something to explain.
+              // Only worth explaining once there is something to explain,
+              // and only the sources that actually appear in the strip.
               Row {
-                visible: root.weekHasEnergy
+                visible: root.weekHasCoffee || root.weekHasTea || root.weekHasEnergy
                 spacing: Style.space(12)
 
                 Row {
+                  visible: root.weekHasCoffee
                   spacing: Style.space(5)
 
                   Rectangle {
@@ -1051,6 +1137,27 @@ Panel {
                 }
 
                 Row {
+                  visible: root.weekHasTea
+                  spacing: Style.space(5)
+
+                  Rectangle {
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: Style.space(8)
+                    height: Style.space(8)
+                    radius: width / 2
+                    color: root.teaTint(root.accentColor)
+                  }
+
+                  Text {
+                    text: root.t("legend.tea")
+                    color: root.dim
+                    font.family: root.contentFontFamily
+                    font.pixelSize: Style.font.caption
+                  }
+                }
+
+                Row {
+                  visible: root.weekHasEnergy
                   spacing: Style.space(5)
 
                   Rectangle {

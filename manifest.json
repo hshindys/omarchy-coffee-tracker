@@ -5,7 +5,7 @@
   "version": "1.2.2",
   "author": "Philipp Bellia",
   "license": "MIT",
-  "description": "Caffeine tracker that derives every cup from how it is actually brewed, plus energy powder and cans, with half-life decay and a seven-day view.",
+  "description": "Caffeine tracker that derives every coffee from how it is actually brewed, and counts tea, energy powder and cans from their labels, with half-life decay and a seven-day view.",
   "kinds": [
     "bar-widget"
   ],
