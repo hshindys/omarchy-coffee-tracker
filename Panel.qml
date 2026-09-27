@@ -506,20 +506,36 @@ Panel {
                   fontFamily: root.contentFontFamily
                 }
 
-                ButtonGroup {
+                // Four chips are wider than the column they live in, and a
+                // Row does not wrap — left alone they run past the column
+                // edge and land on top of the log beside it. So the row
+                // measures itself against the column and shrinks to fit it,
+                // staying at full size whenever there is room for that.
+                Item {
+                  id: brewRowFrame
                   width: parent.width
-                  focusable: false
-                  value: root.host ? root.host.method : "portafilter"
-                  foreground: root.contentForeground
-                  background: root.bar ? root.bar.background : Color.background
-                  fontFamily: root.contentFontFamily
-                  options: [
-                    { value: "portafilter", label: root.t("method.portafilter"), icon: "󱂟", tooltip: root.t("method.portafilter.tooltip") },
-                    { value: "chemex", label: root.t("method.chemex"), icon: "󱜼", tooltip: root.t("method.chemex.tooltip") },
-                    { value: "french", label: root.t("method.french"), icon: "󰙚", tooltip: root.t("method.french.tooltip") },
-                    { value: "turkish", label: root.t("method.turkish"), icon: "󰛊", tooltip: root.t("method.turkish.tooltip") }
-                  ]
-                  onChanged: function(v) { if (root.host) root.host.setMethod(v) }
+                  height: Math.round(brewGroup.implicitHeight * brewGroup.fitScale)
+
+                  ButtonGroup {
+                    id: brewGroup
+                    focusable: false
+                    readonly property real fitScale: implicitWidth > 0
+                      ? Math.min(1, brewRowFrame.width / implicitWidth)
+                      : 1
+                    scale: fitScale
+                    transformOrigin: Item.TopLeft
+                    value: root.host ? root.host.method : "portafilter"
+                    foreground: root.contentForeground
+                    background: root.bar ? root.bar.background : Color.background
+                    fontFamily: root.contentFontFamily
+                    options: [
+                      { value: "portafilter", label: root.t("method.portafilter"), icon: "󱂟", tooltip: root.t("method.portafilter.tooltip") },
+                      { value: "chemex", label: root.t("method.chemex"), icon: "󱜼", tooltip: root.t("method.chemex.tooltip") },
+                      { value: "french", label: root.t("method.french"), icon: "󰙚", tooltip: root.t("method.french.tooltip") },
+                      { value: "turkish", label: root.t("method.turkish"), icon: "󰛊", tooltip: root.t("method.turkish.tooltip") }
+                    ]
+                    onChanged: function(v) { if (root.host) root.host.setMethod(v) }
+                  }
                 }
 
                 Text {
