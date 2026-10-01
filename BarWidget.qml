@@ -142,7 +142,8 @@ BarWidget {
   // the roster is volumes rather than named drinks.
   readonly property var turkishDrinks: [
     { id: "turkish60",  name: t("drink.turkish60"),   ml: 60,  icon: "󰛊", source: "coffee" },
-    { id: "turkish120", name: t("drink.turkish120"),  ml: 120, icon: "󰅷", source: "coffee" }
+    { id: "turkish120", name: t("drink.turkish120"),  ml: 120, icon: "󰅷", source: "coffee" },
+    { id: "turkish333", name: t("drink.turkish333"),  ml: 333, icon: "󰅶", source: "coffee" }
   ]
 
   readonly property var holyDrinks: [
@@ -171,7 +172,9 @@ BarWidget {
   readonly property var teaDrinks: [
     { id: "blacktea", name: t("drink.blacktea"), ml: 250, mgPer100: 20, icon: "󰶞", source: "tea" },
     { id: "earlgrey", name: t("drink.earlgrey"), ml: 250, mgPer100: 20, icon: "󱌙", source: "tea" },
+    { id: "greentea", name: t("drink.greentea"), ml: 250, mgPer100: 12, icon: "󰌪", source: "tea" },
     { id: "milktea",  name: t("drink.milktea"),  ml: 200, mgPer100: 20, icon: "󰊦", source: "tea" },
+    { id: "karak",    name: t("drink.karak"),    ml: 200, mgPer100: 30, icon: "󰶟", source: "tea" },
     { id: "matcha",   name: t("drink.matcha"),   ml: 120, mgPer100: 50, icon: "󰆪", source: "tea" }
   ]
 
