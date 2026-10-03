@@ -53,6 +53,19 @@ portafilter, a teapot or a shaker.
   drink nothing else.
 - **The last seven days**, stacked by source, with the daily goal as a
   hairline across the columns.
+- **The level you are at, as a colour** — green under half the goal, amber
+  to 80 %, red past it. The bar label, the fill and the percentage pill all
+  follow it, and they ease into the new colour instead of stepping to it.
+  The same two thresholds decide when the 80 % heads-up fires, so the
+  colour and the alert agree about when "close" starts.
+- **The calendar week in one line** — in the hover tooltip: what the week
+  has cost so far, what that works out to per day, and an arrow against the
+  same stretch of last week. It runs Monday to now rather than a rolling
+  seven days, which is a different window from the columns above and a
+  different question: one is what this week has cost, the other what the
+  last week looked like.
+- **An answer when you log one** — the cup bounces, steam lifts off it for
+  two seconds, and then nothing is still moving.
 
 Defaults follow the EFSA figure of 400 mg a day as a safe habitual intake
 for a healthy adult, and a 5 h half-life, which is the population mean.
@@ -116,8 +129,22 @@ typed by hand into keybindings.
 The panel's own settings are behind the `EINSTELLUNGEN` / `SETTINGS`
 disclosure at the bottom: daily limit, half-life, residual threshold, dose,
 bean strength, extraction yields, powder serving, and the two toggles for
-the bar label and the limit notification. They are written to
-`~/.config/omarchy/shell.json` under this widget's entry.
+the bar label and the limit notification. Under **Appearance & alerts**
+sits the quiet-hour switch and the two chart colours. Everything is written
+to `~/.config/omarchy/shell.json` under this widget's entry.
+
+**Night mode** drops the 80 % heads-up from the configured hour onward, so
+the evening is not interrupted by a warning about a goal you already know
+you have hit. The daily limit itself still notifies — that is the one
+message worth having at 22:00. The heads-up it replaces is a daytime
+courtesy: it fires once, when a drink crosses 80 % of the limit, and never
+on one that also crosses the limit, so a single sip cannot produce two
+notifications.
+
+**Chart colours** are two swatch rows, one for the decay curve and one for
+the threshold line. The first swatch in each row is the theme's own, drawn
+as whatever the chart would fall back to; picking it writes an empty
+string, which is what "follow the theme" looks like in `shell.json`.
 
 ## Language
 

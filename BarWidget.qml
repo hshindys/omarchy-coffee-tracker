@@ -72,6 +72,37 @@ BarWidget {
   readonly property bool notify: setting("notify", true) === true
   readonly property bool showAmount: setting("showAmount", true) !== false
 
+  // ---- Night mode. Past the configured hour the widget goes quiet: the
+  //      80 % heads-up is dropped and the daily limit is the only thing
+  //      that still reaches the notification daemon. The hour reads from
+  //      shell.json like every other knob here, so the quiet hours are the
+  //      user's rather than the plugin's.
+  readonly property bool nightModeEnabled: setting("nightMode", true) !== false
+  readonly property int nightStartHour: Math.round(clampNum(setting("nightStartHour", 20), 0, 23))
+  readonly property int hourOfDay: new Date(now).getHours()
+  readonly property bool nightMode: nightModeEnabled && hourOfDay >= nightStartHour
+
+  // ---- Chart colours. Empty means "follow the theme", which is what the
+  //      panel draws when nothing has been chosen yet.
+  readonly property string chartCurveColor: String(setting("chartCurveColor", "") || "").trim()
+  readonly property string chartThresholdColor: String(setting("chartThresholdColor", "") || "").trim()
+
+  // ---- The session's light or dark mode. The shell reads it straight out
+  //      of the active theme but never publishes it, and the level palette
+  //      below needs it: the same three hues that read as text on a dark
+  //      bar are unreadable on a light one. colors.toml states it as
+  //      `mode = "dark"` / `mode = "light"`; anything the theme does not
+  //      say is taken as dark, which is what Omarchy itself defaults to.
+  readonly property string themeColorsPath: (Quickshell.env("XDG_STATE_HOME") || Quickshell.env("HOME") + "/.local/state")
+    + "/omarchy/current/theme/colors.toml"
+
+  property bool systemDarkMode: true
+
+  function loadThemeMode(raw) {
+    var match = String(raw || "").match(/^\s*mode\s*=\s*["']?([A-Za-z]+)/m)
+    root.systemDarkMode = match ? String(match[1]).toLowerCase() !== "light" : true
+  }
+
   // ---- Language. "auto" follows the session locale; the panel's picker
   //      writes a concrete code here when the user overrides it. Every
   //      user-facing string in this file and in the panel goes through t().
@@ -317,6 +348,41 @@ BarWidget {
     return per > 0 ? Math.floor(remainingMg / per) : 0
   }
 
+  // ---- Level colour. Green under half the ceiling, yellow to 80 %, red
+  //      past it — the three states the bar label, the panel fill and the
+  //      percentage pill all speak in.
+  //
+  //      The two thresholds are not hard steps: they meet over a narrow
+  //      window either side of 50 % and 80 %, so the colour the panel
+  //      animates toward is already close to the one it lands on and a
+  //      single sip never snaps green to yellow in one frame. Exactly on
+  //      the threshold the colour is exactly the colour the rule names.
+  //
+  //      Two palettes, picked by the session's own light or dark mode: a
+  //      dark bar wants the bright trio, a light one the deep trio, and
+  //      the theme is the only thing here that knows which it is.
+  readonly property color levelGreen: systemDarkMode ? "#7ee787" : "#1a7f37"
+  readonly property color levelYellow: systemDarkMode ? "#e3b341" : "#9a6700"
+  readonly property color levelRed: systemDarkMode ? "#ff7b72" : "#cf222e"
+
+  function mixLevel(from, to, amount) {
+    var k = Math.max(0, Math.min(1, amount))
+    return Qt.rgba(from.r + (to.r - from.r) * k,
+      from.g + (to.g - from.g) * k,
+      from.b + (to.b - from.b) * k)
+  }
+
+  function levelColorFor(progress) {
+    var p = Math.max(0, Math.min(1, Number(progress) || 0))
+    if (p <= 0.45) return levelGreen
+    if (p < 0.55) return mixLevel(levelGreen, levelYellow, (p - 0.45) / 0.10)
+    if (p <= 0.75) return levelYellow
+    if (p < 0.85) return mixLevel(levelYellow, levelRed, (p - 0.75) / 0.10)
+    return levelRed
+  }
+
+  readonly property color levelColor: levelColorFor(todayProgress)
+
   // ---- Decay. First-order elimination at the configured half-life; the
   //      standard 5 h is the population mean for a healthy adult. Source
   //      makes no difference here — the molecule is the same one.
@@ -446,6 +512,67 @@ BarWidget {
     return peak
   }
 
+  // ---- The calendar week, Monday to Sunday. The strip above is a rolling
+  //      seven days and says nothing about "this week", which is the
+  //      question the tooltip answers: how much has this week cost so far,
+  //      what that works out to per day, and which way that daily rate is
+  //      moving against the same stretch of last week.
+  //
+  //      The average divides by the days that have actually happened —
+  //      Monday's tooltip should not read as a crash just because only one
+  //      day of the week is in the books — and the trend compares like with
+  //      like by measuring last week over those same days only.
+  function startOfWeek(ms) {
+    var day = new Date(ms)
+    day.setHours(0, 0, 0, 0)
+    day.setDate(day.getDate() - ((day.getDay() + 6) % 7))
+    return day.getTime()
+  }
+
+  function mgBetween(fromMs, toMs) {
+    var total = 0
+    for (var i = 0; i < entries.length; i++)
+      if (entries[i].t >= fromMs && entries[i].t < toMs) total += Number(entries[i].mg) || 0
+    return Math.round(total)
+  }
+
+  readonly property real weekStartMs: startOfWeek(now)
+
+  readonly property real weekEndMs: startOfWeek(weekStartMs + 7 * 86400000)
+
+  // Stepped day by day rather than divided by 86400000, because a week
+  // containing a clock change is 167 or 169 hours long and the count is a
+  // calendar question, not an elapsed-time one.
+  readonly property int weekElapsedDays: {
+    var count = 1
+    var cursor = new Date(weekStartMs)
+    var today = startOfDay(now)
+    while (cursor.getTime() < today && count < 7) {
+      cursor.setDate(cursor.getDate() + 1)
+      count += 1
+    }
+    return count
+  }
+
+  readonly property int weekMg: mgBetween(weekStartMs, weekEndMs)
+  readonly property int weekDayAverage: weekElapsedDays > 0 ? Math.round(weekMg / weekElapsedDays) : 0
+
+  readonly property int previousWeekMg: mgBetween(startOfWeek(weekStartMs - 7 * 86400000), weekStartMs)
+  readonly property int previousWeekDayAverage: weekElapsedDays > 0 ? Math.round(previousWeekMg / weekElapsedDays) : 0
+
+  // 1 up, -1 down, 0 flat. A swing smaller than a tenth of a cup or five
+  // percent of last week's rate — whichever is larger — is one drink, not a
+  // direction, and an arrow that flickers over a single espresso is worse
+  // than no arrow at all.
+  readonly property int weekTrend: {
+    var noise = Math.max(10, previousWeekDayAverage * 0.05)
+    if (weekDayAverage - previousWeekDayAverage > noise) return 1
+    if (previousWeekDayAverage - weekDayAverage > noise) return -1
+    return 0
+  }
+
+  readonly property string weekTrendArrow: weekTrend > 0 ? "↑" : (weekTrend < 0 ? "↓" : "→")
+
   // ---- Persistence ----------------------------------------------------
   function loadLog(raw) {
     var parsed = []
@@ -504,9 +631,32 @@ BarWidget {
       root.bar.shell.updateEntryInline(root.moduleName, entry)
   }
 
-  function notifySend(title, body) {
+  // `kind` is what decides whether night mode lets the message through:
+  // "limit" is the one that survives the quiet hours, everything else is
+  // the daytime chatter that stops at the configured hour.
+  function notifySend(title, body, kind) {
     if (!notify) return
+    if (nightMode && String(kind || "") !== "limit") return
     Quickshell.execDetached(["notify-send", "-a", t("notify.appName"), title, body])
+  }
+
+  // ---- The cup, animated. Bumped once per logged drink and held for two
+  //      seconds; the bar and the panel each watch this counter, run their
+  //      own bounce and, in the panel's case, lift a little steam, then
+  //      settle back to idle with nothing left moving.
+  property int cupPulse: 0
+  property bool cupAnimating: false
+
+  function pulseCup() {
+    root.cupPulse += 1
+    root.cupAnimating = true
+    cupAnimTimer.restart()
+  }
+
+  Timer {
+    id: cupAnimTimer
+    interval: 2000
+    onTriggered: root.cupAnimating = false
   }
 
   // ---- Actions --------------------------------------------------------
@@ -514,6 +664,7 @@ BarWidget {
     if (!drink) return
     var mg = caffeineFor(drink)
     var before = todayMg
+    var after = before + mg
 
     var next = entries.slice()
     next.push({
@@ -528,11 +679,22 @@ BarWidget {
     root.now = Date.now()
     root.entries = next
     saveLog()
+    pulseCup()
+
+    // A heads-up at the 80 % line — the same line the level colour turns
+    // red on, so the alert and the bar agree about when things are getting
+    // close. It is a daytime courtesy: night mode drops it, and it never
+    // fires on a drink that also crosses the limit, so one sip can never
+    // produce two notifications.
+    var warnAt = dailyLimit * 0.8
+    if (before < warnAt && after >= warnAt && after <= dailyLimit)
+      notifySend(t("notify.warnTitle"), t("notify.warnBody", after, dailyLimit), "warn")
 
     // Only on the crossing, not on every drink past it — a limit that scolds
-    // you all evening stops being information.
-    if (before <= dailyLimit && before + mg > dailyLimit)
-      notifySend(t("notify.limitTitle"), t("notify.limitBody", before + mg, dailyLimit))
+    // you all evening stops being information. This is the one notification
+    // night mode keeps.
+    if (before <= dailyLimit && after > dailyLimit)
+      notifySend(t("notify.limitTitle"), t("notify.limitBody", after, dailyLimit), "limit")
   }
 
   function addDrinkId(id) {
@@ -594,6 +756,11 @@ BarWidget {
     return parts.join(" · ")
   }
 
+  // The calendar week in one line, for the tooltip: what it has cost so
+  // far, what that works out to per day, and which way that daily rate is
+  // running against the same stretch of last week.
+  readonly property string weekSummary: t("bar.week", weekMg, weekDayAverage, weekTrendArrow)
+
   // ---- Bar label ------------------------------------------------------
   readonly property string displayText: showAmount
     ? barIcon + "  " + todayMg
@@ -608,6 +775,7 @@ BarWidget {
     var summary = bucketSummary()
     var split = summary ? "\n" + summary : ""
     return head + " " + rest + split
+      + "\n" + weekSummary
       + "\n" + t("bar.inBody", activeMg, sleepThreshold, clearAtLabel)
       + "\n" + t("bar.method", methodLabel)
   }
@@ -678,15 +846,44 @@ BarWidget {
     onFileChanged: reload()
   }
 
+  // The theme's own colours.toml, read for nothing but the `mode` line.
+  // The shell reloads the theme through its own IPC rather than by
+  // restarting anything, so the file is re-read with the minute tick as
+  // well — a theme switch lands within sixty seconds instead of never.
+  FileView {
+    id: themeColorsFile
+    path: root.themeColorsPath
+    watchChanges: true
+    printErrors: false
+    onLoaded: root.loadThemeMode(text())
+    onLoadFailed: root.systemDarkMode = true
+    onFileChanged: reload()
+  }
+
   Timer {
     interval: 60000
     running: true
     repeat: true
     triggeredOnStart: false
-    onTriggered: root.now = Date.now()
+    onTriggered: {
+      root.now = Date.now()
+      themeColorsFile.reload()
+    }
   }
 
   Component.onCompleted: stateDirProc.running = true
+
+  // The bounce, on whatever the widget is currently showing. Restarting it
+  // on every log means a second cup mid-animation picks up where the first
+  // left off rather than snapping back to scale 1 first.
+  onCupPulseChanged: if (cupPulse > 0) cupBounce.restart()
+
+  SequentialAnimation {
+    id: cupBounce
+    loops: 3
+    NumberAnimation { target: button; property: "scale"; to: 1.16; duration: 190; easing.type: Easing.OutBack }
+    NumberAnimation { target: button; property: "scale"; to: 1.0; duration: 430; easing.type: Easing.InOutSine }
+  }
 
   IpcHandler {
     target: "coffee"
@@ -720,9 +917,13 @@ BarWidget {
     text: root.vertical ? "" : root.displayText
     labelVisible: !root.vertical
     hasVisualContent: root.vertical ? true : text !== ""
-    // Past the daily ceiling the label turns urgent — the one state where a
-    // caffeine counter has something to say rather than something to show.
-    active: root.overLimit
+    // The label speaks in the level colour as soon as there is anything to
+    // measure — green under half the ceiling, yellow to 80 %, red past it —
+    // which is also the one state where a caffeine counter has something to
+    // say rather than something to show. WidgetButton animates the colour
+    // change, so the bar eases into its new state instead of stepping.
+    active: root.todayEntries.length > 0
+    activeColor: root.levelColor
     dimmed: root.todayEntries.length === 0
     tooltipText: root.tooltip
     fixedHeight: root.vertical ? root.verticalLines.length * Style.bar.iconSlot : -1

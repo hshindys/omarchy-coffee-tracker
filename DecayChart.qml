@@ -44,6 +44,9 @@ Item {
   property color foreground: "white"
   property color dim: "gray"
   property color accent: "steelblue"
+  // The crossing line, on its own so the panel can hand it a colour of the
+  // user's choosing without that choice also recolouring the curve.
+  property color thresholdColor: Qt.rgba(foreground.r, foreground.g, foreground.b, 0.28)
   property color track: "#22ffffff"
   property string fontFamily: ""
   property real fontSize: 10
@@ -131,7 +134,7 @@ Item {
       anchors.right: parent.right
       height: 1
       y: root.yFor(root.threshold)
-      color: Qt.rgba(root.foreground.r, root.foreground.g, root.foreground.b, 0.28)
+      color: root.thresholdColor
       visible: root.ready
 
       Row {

@@ -33,7 +33,11 @@
       "halfLifeHours": 5,
       "sleepThreshold": 50,
       "notify": true,
-      "showAmount": true
+      "showAmount": true,
+      "nightMode": true,
+      "nightStartHour": 20,
+      "chartCurveColor": "",
+      "chartThresholdColor": ""
     },
     "schema": [
       { "key": "language", "type": "enum", "label": "Language", "options": ["auto", "en", "de"], "defaultValue": "auto", "description": "auto follows the session locale. Additional codes appear as locale files are added." },
@@ -49,7 +53,11 @@
       { "key": "holyMgPerServing", "type": "integer", "label": "Caffeine per powder serving (mg)", "min": 10, "max": 500, "step": 10, "defaultValue": 200 },
       { "key": "holyMlPerServing", "type": "integer", "label": "Water per powder serving (ml)", "min": 100, "max": 1000, "step": 50, "defaultValue": 500 },
       { "key": "notify", "type": "boolean", "label": "Notify on limit", "defaultValue": true },
-      { "key": "showAmount", "type": "boolean", "label": "Milligrams in the bar", "defaultValue": true }
+      { "key": "showAmount", "type": "boolean", "label": "Milligrams in the bar", "defaultValue": true },
+      { "key": "nightMode", "type": "boolean", "label": "Night mode", "defaultValue": true, "description": "From the night start hour onward, only the daily limit notifies. The 80% heads-up is kept for daytime." },
+      { "key": "nightStartHour", "type": "integer", "label": "Night starts at (hour)", "min": 0, "max": 23, "defaultValue": 20, "description": "Local time, 0 to 23." },
+      { "key": "chartCurveColor", "type": "string", "label": "Chart curve colour", "defaultValue": "", "description": "Empty follows the theme accent. Any #rgb, #rrggbb or #aarrggbb hex." },
+      { "key": "chartThresholdColor", "type": "string", "label": "Chart threshold colour", "defaultValue": "", "description": "Empty follows a dimmed foreground. Any #rgb, #rrggbb or #aarrggbb hex." }
     ]
   }
 }
