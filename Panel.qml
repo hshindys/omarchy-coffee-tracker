@@ -786,58 +786,11 @@ Panel {
                 }
               }
 
-              // ================= Energydrink =================
+              // ================= Cold drinks =================
               Column {
                 width: parent.width
                 spacing: Style.space(10)
                 visible: root.tab === "energy"
-
-                PanelSectionHeader {
-                  text: root.t("section.holyPowder")
-                  foreground: root.contentForeground
-                  fontFamily: root.contentFontFamily
-                }
-
-                Text {
-                  width: parent.width
-                  text: root.host
-                    ? root.t("holy.summary",
-                      root.host.formatVolume(root.host.holyMlPerServing),
-                      root.host.holyMgPerServing)
-                    : ""
-                  color: root.dim
-                  font.family: root.contentFontFamily
-                  font.pixelSize: Style.font.caption
-                  wrapMode: Text.WordWrap
-                }
-
-                Grid {
-                  id: holyGrid
-                  width: parent.width
-                  columns: 2
-                  columnSpacing: Style.space(10)
-                  rowSpacing: Style.space(10)
-
-                  readonly property real cellWidth: (width - columnSpacing) / 2
-
-                  Repeater {
-                    model: root.host ? root.host.holyDrinks : []
-
-                    DrinkCard {
-                      required property var modelData
-                      width: holyGrid.cellWidth
-                      iconText: modelData.icon
-                      title: modelData.name
-                      subtitle: root.host
-                        ? root.host.formatVolume(root.host.volumeFor(modelData))
-                          + " · " + root.host.caffeineFor(modelData) + " mg"
-                        : ""
-                      foreground: root.contentForeground
-                      fontFamily: root.contentFontFamily
-                      onClicked: if (root.host) root.host.addDrink(modelData)
-                    }
-                  }
-                }
 
                 PanelSectionHeader {
                   text: root.t("section.cans")

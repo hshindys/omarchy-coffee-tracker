@@ -177,6 +177,7 @@ BarWidget {
     { id: "turkish333", name: t("drink.turkish333"),  ml: 333, icon: "󰅶", source: "coffee" }
   ]
 
+  // Kept so old log entries still resolve; the tab no longer offers HOLY.
   readonly property var holyDrinks: [
     { id: "holy-half",  name: t("drink.holy-half"),    servings: 0.5, icon: "󱐩", source: "energy" },
     { id: "holy-1",     name: t("drink.holy-1"),    servings: 1.0, icon: "󱄎", source: "energy" },
@@ -184,29 +185,31 @@ BarWidget {
     { id: "holy-2",     name: t("drink.holy-2"),  servings: 2.0, icon: "󰠠", source: "energy" }
   ]
 
-  // Canned drinks are the one fixed table here: their caffeine is printed on
-  // the label, not chosen by you. Everything sold as an energy drink in the
-  // EU sits at the 32 mg/100 ml ceiling; Club-Mate is a soft drink and is
-  // allowed to be weaker.
+  // Cold drinks are the one fixed table here: their caffeine is printed on
+  // the label, not chosen by you. Red Bull sits at the 32 mg/100 ml EU
+  // ceiling, Pepsi and ice tea at 10; juice, malt, herbs and others are
+  // caffeine-free and log volume only.
   readonly property var canDrinks: [
-    { id: "redbull",  name: t("drink.redbull"),  ml: 250, mgPer100: 32, icon: "󱁱", source: "energy" },
-    { id: "monster",  name: t("drink.monster"),   ml: 500, mgPer100: 32, icon: "󱐋", source: "energy" },
-    { id: "rockstar", name: t("drink.rockstar"),  ml: 500, mgPer100: 32, icon: "󱁰", source: "energy" },
-    { id: "clubmate", name: t("drink.clubmate"), ml: 500, mgPer100: 20, icon: "󰆫", source: "energy" }
+    { id: "juice",   name: t("drink.juice"),   ml: 400, mgPer100: 0, icon: "\uf01ab", source: "energy" },
+    { id: "pepsi",   name: t("drink.pepsi"),   ml: 333, mgPer100: 10, icon: "\uf140b", source: "energy" },
+    { id: "malt",    name: t("drink.malt"),    ml: 333, mgPer100: 0, icon: "\uf1070", source: "energy" },
+    { id: "herbs",   name: t("drink.herbs"),   ml: 333, mgPer100: 0, icon: "\uf032a", source: "energy" },
+    { id: "others",  name: t("drink.others"),  ml: 333, mgPer100: 0, icon: "\uf130e", source: "energy" },
+    { id: "redbull", name: t("drink.redbull"), ml: 333, mgPer100: 32, icon: "\uf1071", source: "energy" },
+    { id: "icetea",  name: t("drink.icetea"),  ml: 250, mgPer100: 10, icon: "\uf0d9e", source: "energy" }
   ]
 
-  // Tea is steeped, not extracted: leaf, water temperature and steep time
-  // are yours, and none of the three is a setting on this panel. So the
-  // roster carries its own strength in mg/100 ml the way the cans do —
-  // a typical cup of that leaf — rather than pretending a bean you never
-  // used decides it.
   readonly property var teaDrinks: [
-    { id: "blacktea", name: t("drink.blacktea"), ml: 250, mgPer100: 20, icon: "󰶞", source: "tea" },
-    { id: "earlgrey", name: t("drink.earlgrey"), ml: 250, mgPer100: 20, icon: "󱌙", source: "tea" },
-    { id: "greentea", name: t("drink.greentea"), ml: 250, mgPer100: 12, icon: "󰌪", source: "tea" },
-    { id: "milktea",  name: t("drink.milktea"),  ml: 200, mgPer100: 20, icon: "󰊦", source: "tea" },
-    { id: "karak",    name: t("drink.karak"),    ml: 200, mgPer100: 30, icon: "󰶟", source: "tea" },
-    { id: "matcha",   name: t("drink.matcha"),   ml: 120, mgPer100: 50, icon: "󰆪", source: "tea" }
+    { id: "blacktea",       name: t("drink.blacktea"),       ml: 333, mgPer100: 20, icon: "\uf0d9e", source: "tea" },
+    { id: "blacktea-small", name: t("drink.blacktea-small"), ml: 150, mgPer100: 20, icon: "\uf0d9e", source: "tea" },
+    { id: "earlgrey",       name: t("drink.earlgrey"),       ml: 333, mgPer100: 20, icon: "\uf1319", source: "tea" },
+    { id: "greentea",       name: t("drink.greentea"),       ml: 333, mgPer100: 12, icon: "\uf032a", source: "tea" },
+    { id: "greentea-small", name: t("drink.greentea-small"), ml: 150, mgPer100: 12, icon: "\uf032a", source: "tea" },
+    { id: "milktea",        name: t("drink.milktea"),        ml: 333, mgPer100: 20, icon: "\uf02a6", source: "tea" },
+    { id: "karak",          name: t("drink.karak"),          ml: 333, mgPer100: 30, icon: "\uf0d9f", source: "tea" },
+    { id: "masala",         name: t("drink.masala"),         ml: 333, mgPer100: 20, icon: "\uf0d9f", source: "tea" },
+    { id: "adeni",          name: t("drink.adeni"),          ml: 333, mgPer100: 20, icon: "\uf02a6", source: "tea" },
+    { id: "matcha",         name: t("drink.matcha"),         ml: 333, mgPer100: 50, icon: "\uf01aa", source: "tea" }
   ]
 
   readonly property var drinks: {
