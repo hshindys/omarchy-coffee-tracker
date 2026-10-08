@@ -191,8 +191,8 @@ BarWidget {
   // caffeine-free and log volume only.
   readonly property var canDrinks: [
     { id: "juice",   name: t("drink.juice"),   ml: 400, mgPer100: 0, icon: "\uf01ab", source: "energy" },
-    { id: "pepsi",   name: t("drink.pepsi"),   ml: 333, mgPer100: 10, icon: "\uf1070", source: "energy" },
-    { id: "malt",    name: t("drink.malt"),    ml: 333, mgPer100: 0, icon: "\uf1071", source: "energy" },
+    { id: "pepsi",   name: t("drink.pepsi"),   ml: 333, mgPer100: 10, icon: "\uf01aa", source: "energy" },
+    { id: "malt",    name: t("drink.malt"),    ml: 333, mgPer100: 0, icon: "\uf130f", source: "energy" },
     { id: "herbs",   name: t("drink.herbs"),   ml: 333, mgPer100: 0, icon: "\uf0e66", source: "energy" },
     { id: "others",  name: t("drink.others"),  ml: 333, mgPer100: 0, icon: "\uf02a6", source: "energy" },
     { id: "redbull", name: t("drink.redbull"), ml: 333, mgPer100: 32, icon: "\uf140b", source: "energy" },
