@@ -190,26 +190,26 @@ BarWidget {
   // ceiling, Pepsi and ice tea at 10; juice, malt, herbs and others are
   // caffeine-free and log volume only.
   readonly property var canDrinks: [
-    { id: "juice",   name: t("drink.juice"),   ml: 400, mgPer100: 0, icon: "\uf01ab", source: "energy" },
-    { id: "pepsi",   name: t("drink.pepsi"),   ml: 333, mgPer100: 10, icon: "\uf01aa", source: "energy" },
-    { id: "malt",    name: t("drink.malt"),    ml: 333, mgPer100: 0, icon: "\uf130f", source: "energy" },
-    { id: "herbs",   name: t("drink.herbs"),   ml: 333, mgPer100: 0, icon: "\uf0e66", source: "energy" },
-    { id: "others",  name: t("drink.others"),  ml: 333, mgPer100: 0, icon: "\uf02a6", source: "energy" },
-    { id: "redbull", name: t("drink.redbull"), ml: 333, mgPer100: 32, icon: "\uf140b", source: "energy" },
-    { id: "icetea",  name: t("drink.icetea"),  ml: 250, mgPer100: 10, icon: "\uf0d9e", source: "energy" }
+    { id: "juice",   name: t("drink.juice"),   ml: 400, mgPer100: 0, icon: "󰆫", source: "energy" },
+    { id: "pepsi",   name: t("drink.pepsi"),   ml: 333, mgPer100: 10, icon: "󰆪", source: "energy" },
+    { id: "malt",    name: t("drink.malt"),    ml: 333, mgPer100: 0, icon: "󱌏", source: "energy" },
+    { id: "herbs",   name: t("drink.herbs"),   ml: 333, mgPer100: 0, icon: "󰹦", source: "energy" },
+    { id: "others",  name: t("drink.others"),  ml: 333, mgPer100: 0, icon: "󰊦", source: "energy" },
+    { id: "redbull", name: t("drink.redbull"), ml: 333, mgPer100: 32, icon: "󱐋", source: "energy" },
+    { id: "icetea",  name: t("drink.icetea"),  ml: 250, mgPer100: 10, icon: "󰶞", source: "energy" }
   ]
 
   readonly property var teaDrinks: [
-    { id: "blacktea",       name: t("drink.blacktea"),       ml: 333, mgPer100: 20, icon: "\uf0d9e", source: "tea" },
-    { id: "blacktea-small", name: t("drink.blacktea-small"), ml: 150, mgPer100: 20, icon: "\uf0d9e", source: "tea" },
-    { id: "earlgrey",       name: t("drink.earlgrey"),       ml: 333, mgPer100: 20, icon: "\uf1319", source: "tea" },
-    { id: "greentea",       name: t("drink.greentea"),       ml: 333, mgPer100: 12, icon: "\uf032a", source: "tea" },
-    { id: "greentea-small", name: t("drink.greentea-small"), ml: 150, mgPer100: 12, icon: "\uf032a", source: "tea" },
-    { id: "milktea",        name: t("drink.milktea"),        ml: 333, mgPer100: 20, icon: "\uf02a6", source: "tea" },
-    { id: "karak",          name: t("drink.karak"),          ml: 333, mgPer100: 30, icon: "\uf0d9f", source: "tea" },
-    { id: "masala",         name: t("drink.masala"),         ml: 333, mgPer100: 20, icon: "\uf130f", source: "tea" },
-    { id: "adeni",          name: t("drink.adeni"),          ml: 333, mgPer100: 20, icon: "\uf02a6", source: "tea" },
-    { id: "matcha",         name: t("drink.matcha"),         ml: 333, mgPer100: 50, icon: "\uf01aa", source: "tea" }
+    { id: "blacktea",       name: t("drink.blacktea"),       ml: 333, mgPer100: 20, icon: "󰶞", source: "tea" },
+    { id: "blacktea-small", name: t("drink.blacktea-small"), ml: 150, mgPer100: 20, icon: "󰶞", source: "tea" },
+    { id: "earlgrey",       name: t("drink.earlgrey"),       ml: 333, mgPer100: 20, icon: "󱌙", source: "tea" },
+    { id: "greentea",       name: t("drink.greentea"),       ml: 333, mgPer100: 12, icon: "󰌪", source: "tea" },
+    { id: "greentea-small", name: t("drink.greentea-small"), ml: 150, mgPer100: 12, icon: "󰌪", source: "tea" },
+    { id: "milktea",        name: t("drink.milktea"),        ml: 333, mgPer100: 20, icon: "󰊦", source: "tea" },
+    { id: "karak",          name: t("drink.karak"),          ml: 333, mgPer100: 30, icon: "󰶟", source: "tea" },
+    { id: "masala",         name: t("drink.masala"),         ml: 333, mgPer100: 20, icon: "󱌏", source: "tea" },
+    { id: "adeni",          name: t("drink.adeni"),          ml: 333, mgPer100: 20, icon: "󰊦", source: "tea" },
+    { id: "matcha",         name: t("drink.matcha"),         ml: 333, mgPer100: 50, icon: "󰆪", source: "tea" }
   ]
 
   readonly property var drinks: {
