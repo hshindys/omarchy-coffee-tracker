@@ -190,11 +190,11 @@ BarWidget {
   // ceiling, Pepsi and ice tea at 10; juice, malt, herbs and others are
   // caffeine-free and log volume only.
   readonly property var canDrinks: [
-    { id: "juice",   name: t("drink.juice"),   ml: 400, mgPer100: 0, icon: "\uf1043", source: "energy" },
+    { id: "juice",   name: t("drink.juice"),   ml: 400, mgPer100: 0, icon: "\uf01ab", source: "energy" },
     { id: "pepsi",   name: t("drink.pepsi"),   ml: 333, mgPer100: 10, icon: "\uf1070", source: "energy" },
     { id: "malt",    name: t("drink.malt"),    ml: 333, mgPer100: 0, icon: "\uf1071", source: "energy" },
     { id: "herbs",   name: t("drink.herbs"),   ml: 333, mgPer100: 0, icon: "\uf0e66", source: "energy" },
-    { id: "others",  name: t("drink.others"),  ml: 333, mgPer100: 0, icon: "\uf01ab", source: "energy" },
+    { id: "others",  name: t("drink.others"),  ml: 333, mgPer100: 0, icon: "\uf02a6", source: "energy" },
     { id: "redbull", name: t("drink.redbull"), ml: 333, mgPer100: 32, icon: "\uf140b", source: "energy" },
     { id: "icetea",  name: t("drink.icetea"),  ml: 250, mgPer100: 10, icon: "\uf0d9e", source: "energy" }
   ]
